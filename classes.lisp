@@ -8,39 +8,39 @@
 (defconstant *quantsymbols* '(FORALL EXISTS))
 
 (defclass quantsent ()
-  ((variables :acessor variables)
-  (sentence :acessor sentence)))
+  ((variables :accessor variables)
+   (sentence :accessor sentence)))
 
 (defclass equation ()
-  ((term-1 :acessor term-1)
-   (term-2 :acessor term-2)))
+  ((term-1 :accessor term-1)
+   (term-2 :accessor term-2)))
 
 (defclass logsent ()
-  ((logoperator :acessor logoperator)
-   (sentences :acessor sentences)))
+  ((logoperator :accessor logoperator)
+   (sentences :accessor sentences)))
 ;;No caso do or e do and, que são variáveis no número de argumentos; o que fazer?
 ;;talvez binarizar seja adequado.
 
 (defclass relsent ()
-  ((relword :acessor relword)
-   (args :acessor args)))
+  ((relword :accessor relword)
+   (args :accessor args)))
 
 (defclass funterm ()
-  ((funword :acessor funword)
-   (args :acessor args)
-   (return-type :acessor return-type)))
+  ((funword :accessor funword)
+   (args :accessor args)
+   (return-type :accessor return-type)))
 
 ;;classe das constantes: (?) [type é o instance do que ela é, colocar subclass]
 (defclass word ()
-  (type :acessor type))
+  (type :accessor type))
 
 ;;nas variáveis, elas vão precisar assumir tipos específicos dependendo da
 ;;sentença; além de que talvez seja relevante saber se é rowvar ou objvar.
 ;;ver se essa coisa de saber se é row é util ou não
 (defclass variable ()
-  (name :acessor name)
-  (type :acessor type)
-  (row? :acessor type))
+  (name :accessor name)
+  (type :accessor type)
+  (row? :accessor type))
 
 ;;fparse retorna a formula f-in parseada.
 ;;q é uma fila (ainda não adaptei o código pros casos de indeterminação)
