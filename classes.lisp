@@ -32,15 +32,16 @@
 
 ;;classe das constantes: (?) [type é o instance do que ela é, colocar subclass]
 (defclass word ()
-  (type :accessor type))
+  ((name :accessor name)
+   (type :accessor type)))
 
 ;;nas variáveis, elas vão precisar assumir tipos específicos dependendo da
 ;;sentença; além de que talvez seja relevante saber se é rowvar ou objvar.
 ;;ver se essa coisa de saber se é row é util ou não
 (defclass variable ()
-  (name :accessor name)
-  (type :accessor type)
-  (row? :accessor type))
+  ((name :accessor name)
+   (type :accessor type)
+   (row? :accessor row?)))
 
 ;;fparse retorna a formula f-in parseada.
 ;;q é uma fila (ainda não adaptei o código pros casos de indeterminação)
@@ -56,31 +57,66 @@
 ;;Além disso, p/ descobrir que uma palavra é uma relword, não basta ver se é
 ;;instância de relation; é preciso armazenar todas
 
+(defun check-function (c word) 
+  ;;checa se a palavra é uma funword num dado contexto c que é bem formado
+  ;;de acordo com as regras do programa (ainda não definido).
+  )
+
+(defun check-relation (c word)
+  ;;checa se a palavra é uma funword num dado contexto c que é bem formado
+  ;;de acordo com as regras do programa (ainda não definido).
+
+  )
+
+(defun refresh-context (c sent)
+  ;;checa se precisa mexer no contexto e o faz se necessário.
+  
+  )
+
 (defun fparse (c f-in f-out q)
-  (let ((head (car f-in))) ;; VER: se f-in não é uma lista (constante ou var).
-    (cond
-      ((member head *quantsymbols*) 
-       (let (sent (make-instance 'quantsent))
-	 (setf (variables sent) (cadr f-in)) ;;parsear as variáveis (*)
-	 (setf (sentence sent) (fparse c (cddr f-in) f-out q)) ;;?
-	 sent))
-      ((equal head '=)
-       (let (sent (make-instance 'equation))
-	 (setf (term-1 sent) (fparse c (cadr f-in) f-out q))
-	 (setf (term-2 sent) (fparse c (caddr f-in) f-out q))
-	 sent))
-      ((member head *logsymbols*)
-       (let (sent (make-instance 'logsent))
-	 (mapcar #'(lambda (sent-in)
-		     (funcall #'fparse c sent-in f-out q))
-		 (cdr sent)))) ;;conferir se isso está certo
-      ;;daqui, ou é um relsent, ou um funterm ou uma constante, ou variável.
-      ((member (string head) '(#\? #\@)) ;jogar lista p fora como constante (?)
-       (let (sent (make-instance 'variable))
-	 ;;tipo(?)
-	 (setf (name sent) ())
-	 ))
-      )))
+  (if (listp f-in)
+      (let ((head (car f-in)))
+	(cond
+	  ((member head *quantsymbols*)  ;;QUANTSENT
+	   (let (sent (make-instance 'quantsent))
+	     (setf (variables sent) (cadr f-in)) ;;parsear as variáveis (*)
+	     (setf (sentence sent) (fparse c (cddr f-in) f-out q)) ;;?
+	     sent))
+	  ((equal head '=)
+	   (let (sent (make-instance 'equation))
+	     (setf (term-1 sent) (fparse c (cadr f-in) f-out q))
+	     (setf (term-2 sent) (fparse c (caddr f-in) f-out q))
+	     sent))
+	  ((member head *logsymbols*)    ;;LOGSENT
+	   (let (sent (make-instance 'logsent))
+	     (mapcar #'(lambda (sent-in)
+			 (funcall #'fparse c sent-in f-out q))
+		     (cdr sent)))) ;;conferir se isso está certo
+	  ;;daqui, ou é um relsent ou um funterm
+	  ((check-function c head)
+	   (let (sent (make-instance 'funterm))
+	     (setf (funword sent) head)
+	     (setf (args sent)  ) ;; ****** aqui faz algo parecido com a lista de variáveis em quantsent.
+
+	     sent))
+	  ((check-relation c head)
+	   (let (sent (make-instance 'relsent))
+	     (setf (relword sent) head)
+	     (setf (args sent)  ) ;; **********de novo
+	     (refresh-context c f-in)
+	     sent
+	     ))
+	  (t)  ;;variável posiçao de relword (?)
+	  ))
+      (if (or (equal (char (string f-in) 0) #\?)
+	      (equal (char (string f-in) 0) #\@)) ;;rever 
+	  (let (sent (make-instance 'variable))
+	    ;;tipo(?)
+	    (setf (name sent) f-in)
+	    (setf (row? sent) (equal (char (string f-in) 0) #\@))
+	    sent)
+	  (let (sent (make-instance 'word))
+	    (setf (name sent) f-in)))))
 
 ;;;(*) Esse caso precisa ser visto a parte, visto que vai ser uma lista de
 ;;;variáveis, o que não é previsto pro fparse fazer. E.g.:
